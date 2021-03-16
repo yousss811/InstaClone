@@ -5,13 +5,24 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.instaclone.Post;
+import com.example.instaclone.PostsAdapter;
 import com.example.instaclone.R;
+import com.parse.FindCallback;
+import com.parse.ParseException;
+import com.parse.ParseQuery;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -20,7 +31,13 @@ import com.example.instaclone.R;
  */
 public class PostsFragment extends Fragment {
 
+    public static final String TAG = "PostsFragment";
+
+    public static final String KEY_CREATED_AT = "createdAt";
+
     private RecyclerView rvPosts;
+    private PostsAdapter adapter;
+    private List<Post> allPosts;
 
 /*
     // TODO: Rename parameter arguments, choose names that match
@@ -73,8 +90,38 @@ public class PostsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         rvPosts = view.findViewById(R.id.rvPosts);
 
+        allPosts = new ArrayList<>();
+        adapter = new PostsAdapter(getContext(),allPosts);
+
+        rvPosts.setAdapter(adapter);
+
+        rvPosts.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        queryPosts();
+
     }
+
+    protected void queryPosts() {
+        ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
+        query.include(Post.KEY_USER);
+        query.setLimit(20);
+        query.addDescendingOrder(KEY_CREATED_AT);
+        query.findInBackground(new FindCallback<Post>() {
+            @Override
+            public void done(List<Post> posts, ParseException e) {
+                if(e!= null){
+                    Log.e(TAG, "Issue getting post", e);
+                    return;
+                }
+                for(Post post:posts){
+                    Log.i(TAG, "Post" + post.getDescription() + ", username: " + post.getUser().getUsername());
+                }
+                allPosts.addAll(posts);
+                adapter.notifyDataSetChanged();
+            }
+        });
+    }
+
 }
