@@ -35,6 +35,7 @@ public class PostsFragment extends Fragment {
 
     public static final String KEY_CREATED_AT = "createdAt";
 
+    private SwipeRefreshLayout swipeContainer;
     private RecyclerView rvPosts;
     private PostsAdapter adapter;
     private List<Post> allPosts;
@@ -90,6 +91,20 @@ public class PostsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                queryPosts();
+                swipeContainer.setRefreshing(false);
+            }
+        });
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
+
         rvPosts = view.findViewById(R.id.rvPosts);
 
         allPosts = new ArrayList<>();
@@ -102,6 +117,7 @@ public class PostsFragment extends Fragment {
         queryPosts();
 
     }
+
 
     protected void queryPosts() {
         ParseQuery<Post> query = ParseQuery.getQuery(Post.class);
